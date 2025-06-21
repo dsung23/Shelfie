@@ -3,6 +3,7 @@ import React from 'react'
 import { Slot, Stack } from 'expo-router'
 import { Colors } from "../constants/Colors"
 import { UserProvider } from '../context/UserContext'
+import { BooksProvider } from '../context/BooksContext'
 
 const RootLayout = () => {
   const colorScheme = useColorScheme();
@@ -10,6 +11,7 @@ const RootLayout = () => {
   console.log(colorScheme);
   return (
     <UserProvider>
+      <BooksProvider>
         <StatusBar value="auto" />
         <Stack screenOptions={{
             headerStyle: { backgroundColor: theme.navBackground},
@@ -24,10 +26,8 @@ const RootLayout = () => {
             }}/>
 
             
-            
-
         </Stack>
-    
+      </BooksProvider>
     </UserProvider>
   )
 }
