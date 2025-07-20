@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from 'react'
-import { databases } from '../lib/appwrite'
+import { databases, client } from '../lib/appwrite'
 import { ID, Permission, Query, Role } from 'react-native-appwrite'
 import { useUser } from '../hooks/useUser'
 
@@ -30,6 +30,12 @@ export function BooksProvider({children}) {
 
     async function fetchBookById(id) {
         try {
+            const response = await databases.getDocument(
+                DATABASE_ID,
+                COLLECTION_ID,
+                id
+            )
+            return response
 
         } catch (error) {
             console.error(error.message)
@@ -55,6 +61,11 @@ export function BooksProvider({children}) {
     }
     async function deleteBook(id) {
         try {
+            await databases.deleteDocument(
+                DATABASE_ID,
+                COLLECTION_ID,
+                id
+            )
 
         } catch (error) {
             console.error(error.message)
@@ -62,10 +73,28 @@ export function BooksProvider({children}) {
     }
 
     useEffect(() => {
+        let unsubscribe
+        const channel = `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`
         if (user) {
             fetchBooks()
+
+            unsubscribe = client.subscribe(channel, (response) => {
+                const {payload, events } = response
+
+                if (events[0].includes('create')) {
+                    setBooks((prevBooks)=> [...prevBooks, payload])
+                }
+
+                if (events[0].includes('delete')) {
+                    setBooks((prevBooks)=> prevBooks.filter((book)=> book.$id !== payload.$id ))
+                }
+            })
         } else {
             setBooks([])
+        }
+
+        return () => {
+            if (unsubscribe) unsubscribe()
         }
     }, [user])
 
